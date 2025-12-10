@@ -1,23 +1,15 @@
 import React, { useState, useRef } from 'react';
-import { BarChart3, DollarSign, Users } from 'lucide-react';
-import { ReportsModal } from '../../shared/reports';
+import { BarChart3, Users } from 'lucide-react';
 import { TeamPerformanceMetrics } from '../../TeamIncharge/TeamPerformanceMetrics';
 import { useAuth } from '../../../contexts/AuthContext';
 import { TeamMetricsReportModal } from '../../TeamIncharge/modals/TeamMetricsReportModal';
 
-type ReportTab = 'cases' | 'payments' | 'analytics' | 'team' | 'telecaller';
 
 export const ReportsSection: React.FC = () => {
-  const [showReportsModal, setShowReportsModal] = useState(false);
+
   const [showTeamMetricsModal, setShowTeamMetricsModal] = useState(false);
-  const [selectedTab, setSelectedTab] = useState<ReportTab>('analytics');
   const { user } = useAuth();
   const metricsRef = useRef<HTMLDivElement>(null);
-
-  const openReportModal = (tab: ReportTab) => {
-    setSelectedTab(tab);
-    setShowReportsModal(true);
-  };
 
   const scrollToMetrics = () => {
     metricsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -59,17 +51,6 @@ export const ReportsSection: React.FC = () => {
         <TeamPerformanceMetrics />
       </div>
 
-      {showReportsModal && user && (
-        <ReportsModal
-          isOpen={showReportsModal}
-          onClose={() => setShowReportsModal(false)}
-          tenantId={user.tenantId || ''}
-          userRole="company_admin"
-          userId={user.id}
-          companyName={''}
-          initialTab={selectedTab}
-        />
-      )}
 
       {showTeamMetricsModal && user && (
         <TeamMetricsReportModal

@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { BarChart3, DollarSign, Users } from 'lucide-react';
+import { BarChart3, Users } from 'lucide-react';
 import { ReportsModal } from '../shared/reports';
 import { TeamPerformanceMetrics } from './TeamPerformanceMetrics';
 import { useAuth } from '../../contexts/AuthContext';
@@ -10,14 +10,11 @@ type ReportTab = 'cases' | 'payments' | 'analytics' | 'team' | 'telecaller';
 export const ReportsComponent: React.FC = () => {
   const [showReportsModal, setShowReportsModal] = useState(false);
   const [showTeamMetricsModal, setShowTeamMetricsModal] = useState(false);
-  const [selectedTab, setSelectedTab] = useState<ReportTab>('analytics');
+  const [selectedTab] = useState<ReportTab>('analytics');
   const { user } = useAuth();
   const metricsRef = useRef<HTMLDivElement>(null);
 
-  const openReportModal = (tab: ReportTab) => {
-    setSelectedTab(tab);
-    setShowReportsModal(true);
-  };
+
 
   const scrollToMetrics = () => {
     metricsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
