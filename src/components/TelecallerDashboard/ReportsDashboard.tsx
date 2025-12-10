@@ -159,6 +159,17 @@ export const ReportsDashboard: React.FC = () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const caseData: any = log.customer_cases || {};
 
+        // Helper to safely get nested values (case insensitive)
+        const getValue = (keys: string[]) => {
+          for (const key of keys) {
+            if (caseData[key] !== undefined && caseData[key] !== null && caseData[key] !== '') return caseData[key];
+            if (caseData.case_data && caseData.case_data[key] !== undefined) return caseData.case_data[key];
+            // Try uppercase version in case_data
+            if (caseData.case_data && caseData.case_data[key.toUpperCase()] !== undefined) return caseData.case_data[key.toUpperCase()];
+          }
+          return 0; // Default to 0 for numbers
+        };
+
         // Try to find Employment Type in various locations
         let employmentType = caseData.loan_type || '';
         if (caseData.custom_fields && caseData.custom_fields['Employment Type']) {
@@ -180,10 +191,10 @@ export const ReportsDashboard: React.FC = () => {
           'Loan ID': caseData.loan_id || '',
           'Mobile Number': caseData.mobile_no || '',
           'Address': caseData.address || '',
-          'DPD': caseData.dpd || 0,
-          'POS': caseData.pos_amount || 0,
-          'EMI': caseData.emi_amount || 0,
-          'TOTAL OUTSTANDING': caseData.outstanding_amount || 0,
+          'DPD': getValue(['dpd', 'DPD']),
+          'POS': getValue(['pos_amount', 'pos', 'POS']),
+          'EMI': getValue(['emi_amount', 'emi', 'EMI']),
+          'TOTAL OUTSTANDING': getValue(['outstanding_amount', 'total_outstanding', 'TOTAL OUTSTANDING']),
           'EMPLOYMENT TYPE': employmentType,
           'Payment Link': caseData.payment_link || '',
           'Loan Amount': caseData.loan_amount || 0,
@@ -191,7 +202,7 @@ export const ReportsDashboard: React.FC = () => {
           'Last Payment Amount': caseData.last_paid_amount || 0,
           'Loan Created At': formatDate(caseData.created_at),
           'Call Status': log.call_status || '',
-          'Status Remarks': log.remarks || '',
+          'Status Remarks': log.call_notes || '', // Fixed: was log.remarks
           'PTP Date': log.ptp_date ? formatDate(log.ptp_date) : '',
           'Total Collected Amount': log.amount_collected || 0
         };
