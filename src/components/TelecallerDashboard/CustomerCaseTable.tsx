@@ -69,12 +69,22 @@ const CustomerCaseTable: React.FC<CustomerCaseTableProps> = ({
     }
 
     // Apply DPD filter
+    // Apply DPD filter
     if (dpdFilter !== 'all') {
       cases = cases.filter(c => {
         const dpd = c.dpd || 0;
         if (dpdFilter === '0-30') return dpd <= 30;
         if (dpdFilter === '31-60') return dpd > 30 && dpd <= 60;
-        if (dpdFilter === '60+') return dpd > 60;
+        if (dpdFilter === '61-90') return dpd > 60 && dpd <= 90;
+        if (dpdFilter === '91-100') return dpd > 90 && dpd <= 100;
+        if (dpdFilter === '101-200') return dpd > 100 && dpd <= 200;
+        if (dpdFilter === '201-300') return dpd > 200 && dpd <= 300;
+        if (dpdFilter === '301-500') return dpd > 300 && dpd <= 500;
+        if (dpdFilter === '501-1000') return dpd > 500 && dpd <= 1000;
+        if (dpdFilter === '1001-1500') return dpd > 1000 && dpd <= 1500;
+        if (dpdFilter === '1501-2000') return dpd > 1500 && dpd <= 2000;
+        if (dpdFilter === '2001-2500') return dpd > 2000 && dpd <= 2500;
+        if (dpdFilter === '2500+') return dpd > 2500;
         return true;
       });
       console.log('🔶 After DPD filter:', cases.length, 'cases');
@@ -388,7 +398,16 @@ const CustomerCaseTable: React.FC<CustomerCaseTableProps> = ({
                 <option value="all">All Cases</option>
                 <option value="0-30">0-30 Days</option>
                 <option value="31-60">31-60 Days</option>
-                <option value="60+">60+ Days</option>
+                <option value="61-90">61-90 Days</option>
+                <option value="91-100">91-100 Days</option>
+                <option value="101-200">101-200 Days</option>
+                <option value="201-300">201-300 Days</option>
+                <option value="301-500">301-500 Days</option>
+                <option value="501-1000">501-1000 Days</option>
+                <option value="1001-1500">1001-1500 Days</option>
+                <option value="1501-2000">1501-2000 Days</option>
+                <option value="2001-2500">2001-2500 Days</option>
+                <option value="2500+">2500+ Days</option>
               </select>
             </div>
 
