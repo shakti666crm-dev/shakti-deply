@@ -22,17 +22,7 @@ interface Telecaller {
 
 interface CaseDetail {
     id: string;
-    loan_id: string;
-    customer_name: string;
-    amount_collected: number; // total_collected_amount
-    outstanding_amount: number;
-    case_status: string;
-    latest_call_status: string;
-    latest_ptp_date: string;
-    latest_call_date: string;
-    latest_call_notes: string;
-    telecaller_id: string;
-    telecaller_name?: string;
+    [key: string]: any; // Allow indexing
 }
 
 export const TeamMetricsReportModal: React.FC<TeamMetricsReportModalProps> = ({
@@ -136,22 +126,23 @@ export const TeamMetricsReportModal: React.FC<TeamMetricsReportModalProps> = ({
                 }
             });
 
-            // 4. Map data to CaseDetail interface
+            // 4. Map data to CaseDetail interface - INCLUDE ALL DATA
             const mappedData: CaseDetail[] = cases.map(item => {
                 const latestLog = latestLogMap.get(item.id);
+                const telecallerName = telecallers.find(t => t.id === item.telecaller_id)?.name || 'Unknown';
+
+                // Merge everything into one object
                 return {
-                    id: item.id,
-                    loan_id: item.loan_id,
-                    customer_name: item.customer_name,
+                    ...item, // Spread all original columns
+                    latest_call_status: latestLog?.call_status || item.latest_call_status || 'New',
+                    latest_ptp_date: latestLog?.ptp_date || item.latest_ptp_date || '',
+                    latest_call_date: latestLog?.created_at || item.latest_call_date || '',
+                    latest_call_notes: latestLog?.call_notes || item.latest_call_notes || '',
+                    telecaller_name: telecallerName,
+                    // Ensure numeric amounts for table display
                     amount_collected: item.total_collected_amount || 0,
                     outstanding_amount: parseFloat(item.outstanding_amount || '0'),
-                    case_status: item.case_status || item.status || 'New',
-                    latest_call_status: latestLog?.call_status || item.latest_call_status || '-',
-                    latest_ptp_date: latestLog?.ptp_date || item.latest_ptp_date,
-                    latest_call_date: latestLog?.created_at || item.latest_call_date,
-                    latest_call_notes: latestLog?.call_notes || item.latest_call_notes,
-                    telecaller_id: item.telecaller_id,
-                    telecaller_name: telecallers.find(t => t.id === item.telecaller_id)?.name
+                    case_status: item.case_status || item.status || 'New'
                 };
             });
 
@@ -170,18 +161,49 @@ export const TeamMetricsReportModal: React.FC<TeamMetricsReportModalProps> = ({
         const telecallerName = telecallers.find(t => t.id === selectedTelecallerId)?.name || 'Telecaller';
         const fileName = `${telecallerName}_Report_${new Date().toISOString().split('T')[0]}.xlsx`;
 
-        const exportData = reportData.map(item => ({
-            'Loan ID': item.loan_id,
-            'Customer Name': item.customer_name,
-            'Telecaller': telecallerName,
-            'Status': item.case_status,
-            'Latest Call Status': item.latest_call_status,
-            'PTP Date': item.latest_ptp_date ? new Date(item.latest_ptp_date).toLocaleDateString() : '-',
-            'Last Call Date': item.latest_call_date ? new Date(item.latest_call_date).toLocaleDateString() : '-',
-            'Call Notes': item.latest_call_notes || '-',
-            'Collected Amount': item.amount_collected,
-            'Outstanding Amount': item.outstanding_amount
-        }));
+        // Format data for export - keep everything but format dates
+        const exportData = reportData.map(item => {
+            const row: any = {};
+
+            // Explicitly order important columns first if desired, or just dump everything
+            // Let's add standard headers first
+            row['Loan ID'] = item.loan_id;
+            row['Customer Name'] = item.customer_name;
+            row['Mobile'] = item.mobile_no;
+            row['Telecaller'] = item.telecaller_name;
+            row['Case Status'] = item.case_status;
+            row['Last Call Status'] = item.latest_call_status;
+            row['PTP Date'] = item.latest_ptp_date ? new Date(item.latest_ptp_date).toLocaleDateString('en-IN') : '';
+            row['Last Call Date'] = item.latest_call_date ? new Date(item.latest_call_date).toLocaleDateString('en-IN') : '';
+            row['Call Notes'] = item.latest_call_notes;
+            row['Total Collected'] = item.amount_collected;
+            row['Outstanding'] = item.outstanding_amount;
+
+            // Add all other fields dynamically
+            Object.keys(item).forEach(key => {
+                // Skip fields we already added or complex objects
+                if (['id', 'loan_id', 'customer_name', 'mobile_no', 'telecaller_name', 'case_status',
+                    'latest_call_status', 'latest_ptp_date', 'latest_call_date', 'latest_call_notes',
+                    'amount_collected', 'outstanding_amount', 'status', 'telecaller_id', 'tenant_id'].includes(key)) {
+                    return;
+                }
+
+                const val = item[key];
+                if (val && typeof val === 'object' && !(val instanceof Date)) {
+                    // try to look inside custom fields/case data for Employment Type if needed
+                    if (key === 'custom_fields' || key === 'case_data') {
+                        if (val['Employment Type'] || val['EMPLOYMENT TYPE']) {
+                            row['Employment Type'] = val['Employment Type'] || val['EMPLOYMENT TYPE'];
+                        }
+                        // row[key] = JSON.stringify(val); // Optional: JSON stringify complex objects
+                    }
+                } else {
+                    row[key] = val;
+                }
+            });
+
+            return row;
+        });
 
         const ws = XLSX.utils.json_to_sheet(exportData);
         const wb = XLSX.utils.book_new();
